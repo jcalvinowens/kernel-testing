@@ -1,0 +1,28 @@
+kernel-testing: Simple scripts for testing the Linux kernel under KVM
+=====================================================================
+
+$ scripts/get-stage3.sh amd64
+$ scripts/make-image.sh
+$ ./run.sh amd64.img bzImage
+
+$ scripts/get-stage3.sh armv5tel openrc
+$ scripts/make-image.sh -c ttyAMA -n enp0s13
+$ ./run.py armv5tel.img zImage versatile-pb.dtb
+
+( Note: see https://github.com/systemd/systemd/issues/29775 )
+
+$ scripts/get-stage3.sh arm64
+$ scripts/make-image.sh -c ttyAMA
+$ ./run.py arm64.img Image.gz
+
+[ More coming soon... ]
+
+Gentoo stage3 tarballs are used as root filesystems. The get-stage3.sh
+script will download the most recent amd64-systemd tarball by default.
+It accepts ARCH and optionally TYPE on the cmdline for others. For
+systemd, use only the mergedusr variant.
+
+You can also find the tarballs here:
+
+	https://distfiles.gentoo.org/releases/
+	https://www.gentoo.org/downloads/
