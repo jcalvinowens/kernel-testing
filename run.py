@@ -27,15 +27,16 @@ ARCH_CMDLINES = {
 
 QEMU_ARCH_ARGS = {
 	"x86_64": [
+		"-machine", "pc",
 		"-cpu", "max",
 		"-smp", "2",
 		"-m", "2048",
 		"-device", "pvpanic",
 	],
 	"arm": [
-		"-machine", "versatilepb",
-		"-cpu", "arm926",
-		"-m", "256",
+		"-machine", "virt,highmem=off",
+		"-cpu", "cortex-a15",
+		"-m", "1024",
 	],
 	"aarch64": [
 		"-machine", "virt,gic-version=max",
