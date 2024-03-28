@@ -51,6 +51,7 @@ sudo -p "Enter local password for sudo: " /bin/true
 
 touch ${IMG}
 truncate -s 0 ${IMG}
+chattr +C ${IMG} || true
 truncate -s ${IMGSIZE} ${IMG}
 
 LOOPDEV=$(sudo losetup --show -f ${IMG})
@@ -65,7 +66,7 @@ COSNAME="${COSNAME%%".img"}"
 
 echo "Unpacking ${STAGETARBALL} into ${IMG}"
 sudo mkfs.btrfs --csum blake2 -m single -d single -q ${LOOPDEV}
-sudo mount ${LOOPDEV} mnt
+sudo mount -o noatime,discard ${LOOPDEV} mnt
 sudo tar xfs ${STAGETARBALL} -C mnt
 
 echo "Unpacking portage snapshot into ${IMG}"
