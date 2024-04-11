@@ -1,24 +1,38 @@
 kernel-testing: Simple scripts for testing the Linux kernel under KVM
 =====================================================================
 
-$ scripts/get-stage3.sh amd64
-$ scripts/make-image.sh
-$ ./run.sh amd64.img bzImage
+This is a simple set of scripts for quickly testing the Linux kernel
+under KVM. The scripts depend on qemu, tmux, btrfs-progs, and socat.
 
-$ scripts/get-stage3.sh arm64
-$ scripts/make-image.sh -c ttyAMA
-$ ./run.py arm64.img Image.gz
+Getting started is easy:
 
-$ scripts/get-stage3.sh armv7a
-$ scripts/make-image.sh -c ttyAMA
-$ ./run.py armv7a.img zImage
+	$ scripts/get-stage3.sh amd64
+	$ scripts/make-image.sh tarballs/*amd64* disks/amd64.img
+	$ ./run.sh disks/amd64.img ../linux/arch/x86/boot/bzImage
 
-[ More coming soon... ]
+	$ scripts/get-stage3.sh arm64
+	$ scripts/make-image.sh -c ttyAMA tarballs/*arm64* disks/arm64.img
+	$ ./run.py arm64.img ../linux/arch/arm64/boot/Image.gz
 
-Gentoo stage3 tarballs are used as root filesystems. The get-stage3.sh
-script will download the most recent amd64-systemd tarball by default.
-It accepts ARCH and optionally TYPE on the cmdline for others. For
-systemd, use only the mergedusr variant.
+	$ scripts/get-stage3.sh armv7a
+	$ scripts/make-image.sh -c ttyAMA tarballs/*armv7a* disks/arm.img
+	$ ./run.py armv7a.img ../linux/arch/arm/boot/zImage
+
+	[ More coming soon... ]
+
+The included Kconfigs do not use modules, so nothing needs to be copied
+into the filesystem or mounted inside the VM. They are very minimal, so
+they can be compiled quickly on a laptop: you will almost certainly want
+to apply fragments to enable options related to whatever you're doing.
+
+VMs are configured with two consoles: one for kernel logs using emulated
+serial, and one for the getty using virtioconsole. The scripts split new
+consoles into tmux windows, for ease of use on a remote server via SSH.
+
+Gentoo stage3 tarballs are used to build the root filesystems. The
+get-stage3.sh script will download the most recent amd64-systemd tarball
+by default. It accepts ARCH and optionally TYPE on the cmdline for
+others. For systemd, use only the mergedusr variant.
 
 You can also find the tarballs here:
 
