@@ -18,7 +18,7 @@ import subprocess
 import sys
 import time
 
-CMDLINE = "systemd.getty_auto=no initcall_debug ignore_loglevel"
+CMDLINE = "systemd.gpt_auto=no systemd.getty_auto=no initcall_debug ignore_loglevel"
 ARCH_CMDLINES = {
 	"x86": "root=/dev/vda earlyprintk=serial,ttyS0 console=ttyS0",
 	"ARM": "root=/dev/vda console=ttyAMA0",
@@ -145,7 +145,8 @@ def parse_arguments():
 	p = argparse.ArgumentParser(description="Test Linux under KVM")
 
 	p.add_argument("disk", help="Path to root filesystem for VM")
-	p.add_argument("kernel", help="Path to kernel to execute in VM")
+	p.add_argument("kernel", help="Path to kernel to execute in VM",
+		       nargs="?", default=None)
 	p.add_argument("dtb", help="Path to DTB for VM (if required)",
 		       nargs="?", default=None)
 
@@ -160,6 +161,22 @@ def parse_arguments():
 	return p.parse_args()
 
 def main(args):
+	if not args.kernel:
+		if os.access("./MAINTAINERS", os.R_OK):
+			print("In kernel tree, will run kernel from here...")
+			if os.access("arch/x86/boot/bzImage", os.R_OK):
+				args.kernel = "arch/x86/boot/bzImage"
+			elif os.access("arch/arm/boot/zImage", os.R_OK):
+				args.kernel = "arch/arm/boot/zImage"
+			elif os.access("arch/arm64/boot/Image.gz", os.R_OK):
+				args.kernel = "arch/arm64/boot/Image.gz"
+			else:
+				print("No kernel in this tree?")
+				sys.exit(1)
+		else:
+			print("Run in root of kernel source or pass path")
+			sys.exit(1)
+
 	if args.run_qemu:
 		return sub_run_qemu(args)
 	elif args.run_consoles:
