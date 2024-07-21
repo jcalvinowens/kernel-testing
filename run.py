@@ -107,7 +107,7 @@ def sub_run_qemu(args):
 			["bash", "-c", f"zcat {args.kernel} | file -b -"],
 		)
 
-	ccmd = ["tmux", "split-window", "-p", "85", "-v",
+	ccmd = ["tmux", "split-window", "-p", "85", "-v", "-l80%",
 	       f"tmux set-option -p remain-on-exit on; "
 	       f"{os.path.abspath(sys.argv[0])} {args.disk} "
 	       f"{args.kernel} {args.dtb or ''} --run-consoles"
