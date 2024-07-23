@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 ARCH="amd64"
-TYPE="systemd-mergedusr"
+TYPE="systemd"
 
 if [ -n "${1}" ]; then
 	ARCH="${1}"
