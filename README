@@ -31,8 +31,7 @@ consoles into tmux windows, for ease of use on a remote server via SSH.
 
 Gentoo stage3 tarballs are used to build the root filesystems. The
 get-stage3.sh script will download the most recent amd64-systemd tarball
-by default. It accepts ARCH and optionally TYPE on the cmdline for
-others. For systemd, use only the mergedusr variant.
+by default. It accepts ARCH and optionally TYPE on the cmdline.
 
 You can also find the tarballs here:
 
