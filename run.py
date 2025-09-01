@@ -85,7 +85,7 @@ def build_qemu_command(qemu_arch, disk_path, kernel_path, kernel_cmdline,
 		imgstr = os.path.basename(disk_path)
 		cmd += [
 			"-chardev",
-			f"socket,path=/tmp/console-{imgstr},id=hostconsole",
+			f"file,path=/tmp/console-{imgstr},id=hostconsole",
 			"-serial", "chardev:hostconsole",
 			"-device", "virtio-serial-pci", "-chardev",
 			f"socket,path=/tmp/login-{imgstr},id=hostlogin",
@@ -132,8 +132,7 @@ def sub_run_consoles(args):
 	cmd1 = ["tmux", "split-window", "-h",
 		f"tmux set-option -p remain-on-exit on; "
 		f"socat UNIX-LISTEN:/tmp/login-{istr} -,raw,icanon=0,echo=0"]
-	cmd2 = ["socat", f"UNIX-LISTEN:/tmp/console-{istr}",
-		"-,raw,icanon=0,echo=0"]
+	cmd2 = ["tail", "-f", f"/tmp/console-{istr}"]
 
 	login_window = subprocess.Popen(cmd1)
 	console_window = subprocess.Popen(cmd2)
