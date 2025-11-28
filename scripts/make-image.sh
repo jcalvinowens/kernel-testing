@@ -1,5 +1,6 @@
-#!/bin/bash -e
+#!/bin/fakeroot /bin/bash
 
+set -e
 STAGETARBALL=""
 IMGSIZE="10G"
 SERCON="ttyS"
@@ -15,7 +16,7 @@ HELPTEXT="Usage: ./make-image.sh [opts] <rootfs_tar_path> <disk_path>
 	-z [level]	Compression for VM fstab (default ${IMGCOMP})
 "
 
-while getopts s:c:n:x:l:h i; do
+while getopts s:c:n:x:l:z:h i; do
 	case $i in
 		s) IMGSIZE="${OPTARG}" ;;
 		c) SERCON="${OPTARG}" ;;
@@ -47,65 +48,54 @@ else
 	done
 fi
 
-sudo -p "Enter local password for sudo: " /bin/true
-
-touch ${IMG}
-truncate -s 0 ${IMG}
-chattr +C ${IMG} || true
-truncate -s ${IMGSIZE} ${IMG}
-
-LOOPDEV=$(sudo losetup --show -f ${IMG})
-unmount_image() {
-	sudo umount ${LOOPDEV}
-	sudo losetup -d ${LOOPDEV}
+TMPDIR="$(mktemp -d)"
+cleanup() {
+	rm -rf ${TMPDIR}
 }
-trap unmount_image EXIT
+trap cleanup EXIT
 
 COSNAME="$(basename ${IMG})"
 COSNAME="${COSNAME%%".img"}"
 
-echo "Unpacking ${STAGETARBALL} into ${IMG}"
-sudo mkfs.btrfs --csum blake2 -m single -d single -q ${LOOPDEV}
-sudo mount -o compress=${IMGXCOMP},noatime,discard ${LOOPDEV} mnt
-sudo tar xfs ${STAGETARBALL} -C mnt
+echo "Unpacking ${STAGETARBALL} into ${TMPDIR}"
+tar xfs ${STAGETARBALL} -C ${TMPDIR}
 
-sudo bash -c 'cat > mnt/etc/fstab' <<-END
-/dev/vda / btrfs compress=${IMGCOMP},noatime,discard 0 1
+cat > ${TMPDIR}/etc/fstab <<-END
+/dev/vda / btrfs compress=${IMGCOMP},noatime,discard=async 0 1
 END
 
-echo "Unpacking portage snapshot into ${IMG}"
+echo "Unpacking portage snapshot into ${TMPDIR}"
 if [ ! -e tarballs/portage.tar.xz ]; then
 	wget https://distfiles.gentoo.org/snapshots/portage-latest.tar.xz \
 		-O tarballs/portage.tar.xz
 fi
-sudo mkdir -p mnt/etc/portage/repos.conf
-sudo cp mnt/usr/share/portage/config/repos.conf \
-	mnt/etc/portage/repos.conf/gentoo.conf
-sudo tar xfs tarballs/portage.tar.xz -C mnt/var/db/repos
-sudo mv mnt/var/db/repos/portage mnt/var/db/repos/gentoo
-sudo bash -c 'cat >> mnt/etc/portage/make.conf' <<-END
+mkdir -p ${TMPDIR}/etc/portage/repos.conf
+cp ${TMPDIR}/usr/share/portage/config/repos.conf \
+	${TMPDIR}/etc/portage/repos.conf/gentoo.conf
+tar xfs tarballs/portage.tar.xz -C ${TMPDIR}/var/db/repos
+mv ${TMPDIR}/var/db/repos/portage ${TMPDIR}/var/db/repos/gentoo
+cat >> ${TMPDIR}/etc/portage/make.conf <<-END
 USE="\${USE} verify-sig"
 FEATURES="\${FEATURES} binpkg-request-signature"
 EMERGE_DEFAULT_OPTS="-g"
 END
 
 echo "Hostname: '${COSNAME}'"
-if [ -e mnt/etc/systemd/ ]; then
-	sudo systemd-firstboot --root=mnt --setup-machine-id \
+if [ -e ${TMPDIR}/etc/systemd/ ]; then
+	systemd-firstboot --root=${TMPDIR} --setup-machine-id \
 		--delete-root-password --copy-locale --copy-keymap \
 		--copy-timezone --hostname="${COSNAME}"
-	sudo systemctl --root=mnt enable systemd-networkd
-	sudo systemctl --root=mnt enable systemd-resolved
-	sudo bash -c 'cat > mnt/etc/systemd/network/50-dhcp.network' <<-END
+	systemctl --root=${TMPDIR} enable systemd-networkd
+	systemctl --root=${TMPDIR} enable systemd-resolved
+	cat > ${TMPDIR}/etc/systemd/network/50-dhcp.network <<-END
 	[Match]
 	Name=en*
 
 	[Network]
 	DHCP=ipv4
 	END
-	sudo chattr +C mnt/var/log/journal/
-	sudo mkdir -p mnt/etc/systemd/system/getty@hvc0.service.d/
-	sudo bash -c "cat > mnt/etc/systemd/system/getty@hvc0.service.d/override.conf" <<-END
+	mkdir -p ${TMPDIR}/etc/systemd/system/getty@hvc0.service.d/
+	cat > ${TMPDIR}/etc/systemd/system/getty@hvc0.service.d/override.conf <<-END
 	[Service]
 	Type=simple
 	ExecStart=
@@ -113,23 +103,31 @@ if [ -e mnt/etc/systemd/ ]; then
 	TimeoutSec=1800
 	RestartSec=5
 	END
-	sudo rm mnt/etc/systemd/system/getty.target.wants/*
-	sudo ln -s /dev/null mnt/etc/systemd/system/serial-getty@${SERCON}0.service
-	sudo ln -s /usr/lib/systemd/system/getty@.service \
-		mnt/etc/systemd/system/getty.target.wants/getty@hvc0.service
+	rm ${TMPDIR}/etc/systemd/system/getty.target.wants/*
+	ln -s /dev/null ${TMPDIR}/etc/systemd/system/serial-getty@${SERCON}0.service
+	ln -s /usr/lib/systemd/system/getty@.service \
+		${TMPDIR}/etc/systemd/system/getty.target.wants/getty@hvc0.service
 else
-	sudo bash -c "cat > mnt/etc/conf.d/hostname <<< \"hostname=\\\"${COSNAME}\\\"\""
-	sudo bash -c 'cat > mnt/etc/conf.d/net' <<-END
+	cat > ${TMPDIR}/etc/conf.d/hostname <<< \"hostname=\\\"${COSNAME}\\\"\"
+	cat > ${TMPDIR}/etc/conf.d/net <<-END
 	config_${NETCON}="dhcp"
 	END
-	sudo ln -s net.lo mnt/etc/init.d/net.${NETCON}
-	sudo ln -s /etc/init.d/net.${NETCON} mnt/etc/runlevels/default/net.${NETCON}
-	sudo bash -c 'cat /etc/timezone > mnt/etc/timezone' || echo "Can't copy TZ?"
-	sudo sed -ri 's/^s0/#s0/g' mnt/etc/inittab
-	sudo sed -ri 's/^s1/#s1/g' mnt/etc/inittab
-	sudo bash -c "cat >> mnt/etc/inittab" <<-END
+	ln -s net.lo ${TMPDIR}/etc/init.d/net.${NETCON}
+	ln -s /etc/init.d/net.${NETCON} ${TMPDIR}/etc/runlevels/default/net.${NETCON}
+	cat /etc/timezone > ${TMPDIR}/etc/timezone || echo "Can't copy TZ?"
+	sed -ri 's/^s0/#s0/g' ${TMPDIR}/etc/inittab
+	sed -ri 's/^s1/#s1/g' ${TMPDIR}/etc/inittab
+	cat >> ${TMPDIR}/etc/inittab <<-END
 	s0:12345:respawn:/sbin/agetty hvc0 linux -a root
 	END
 fi
+
+truncate -s0 ${IMG}
+chattr +C ${IMG} || true
+truncate -s${IMGSIZE} ${IMG}
+
+/usr/sbin/mkfs.btrfs \
+	--nodiscard --metadata single --data single --csum blake2 \
+	--rootdir ${TMPDIR} --compress ${IMGXCOMP} ${IMG}
 
 echo "done!"
