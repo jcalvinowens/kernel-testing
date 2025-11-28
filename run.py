@@ -128,11 +128,13 @@ def sub_run_qemu(args):
 
 def sub_run_consoles(args):
 	istr = os.path.basename(args.disk)
-
+	confile = f"/tmp/console-{istr}"
 	cmd1 = ["tmux", "split-window", "-h",
 		f"tmux set-option -p remain-on-exit on; "
 		f"socat UNIX-LISTEN:/tmp/login-{istr} -,raw,icanon=0,echo=0"]
-	cmd2 = ["tail", "-f", f"/tmp/console-{istr}"]
+	cmd2 = ["tail", "-f", confile]
+	with open(confile, "a") as _:
+		pass
 
 	login_window = subprocess.Popen(cmd1)
 	console_window = subprocess.Popen(cmd2)
