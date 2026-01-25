@@ -22,4 +22,9 @@ wget https://distfiles.gentoo.org/releases/${SARCH}/autobuilds/current-stage3-${
 latestfile=$(grep ^stage3 ${metafile} | cut -d' ' -f1)
 rm ${metafile}
 wget https://distfiles.gentoo.org/releases/${SARCH}/autobuilds/current-stage3-${ARCH}-${TYPE}/${latestfile} -O tarballs/${latestfile}
+wget https://distfiles.gentoo.org/releases/${SARCH}/autobuilds/current-stage3-${ARCH}-${TYPE}/${latestfile}.asc -O tarballs/${latestfile}.asc
+gpg --import scripts/20250806.asc > /dev/null 2> /dev/null || true
+gpg --verify tarballs/${latestfile}.asc tarballs/${latestfile} > /dev/null \
+	&& rm tarballs/${latestfile}.asc > /dev/null
+
 echo "tarballs/${latestfile}"

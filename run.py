@@ -27,22 +27,25 @@ ARCH_CMDLINES = {
 
 QEMU_ARCH_ARGS = {
 	"x86_64": [
-		"-machine", "pc",
+		"-machine", "q35,accel=kvm,kernel-irqchip=split",
 		"-cpu", "max",
 		"-smp", "2",
 		"-m", "2048",
 		"-device", "pvpanic",
+		"-device", "intel-iommu,intremap=on,"
+			   "device-iotlb=on,caching-mode=on",
 	],
 	"arm": [
 		"-machine", "virt,highmem=off",
 		"-cpu", "cortex-a15",
-		"-m", "1024",
+		"-m", "2048",
 	],
 	"aarch64": [
 		"-machine", "virt,gic-version=max",
 		"-cpu", "max",
 		"-smp", "2",
 		"-m", "2048",
+		"-device", "virtio-iommu-pci,granule=host",
 	],
 }
 
@@ -60,21 +63,22 @@ def build_qemu_command(qemu_arch, disk_path, kernel_path, kernel_cmdline,
 		"-append", kernel_cmdline,
 		"-drive", f"file={disk_path},if=virtio,index=0,"
 			  "format=raw,discard=on",
-		"-nographic",
-		"-vga", "none",
-		"-display", "none",
+		"-nographic", "-vga", "none", "-display", "none",
+		"-device", "virtio-rng-pci",
 	]
 
 	if dtb_path:
 		cmd += ["-dtb", dtb_path]
 
 	if net:
+		v4net = "172.16.0.0/24"
 		cmd += [
-			"-netdev","user,ipv6=off,net=172.16.0.0/24,id=inet",
-			"-device", "virtio-net-pci,netdev=inet,id=idev",
-			"-smbios",
-			"type=41,designation='Onboard LAN',instance=1,"
-			"kind=ethernet,pcidev=idev",
+			"-netdev", f"user,ipv6=on,ipv4=on,net={v4net},id=inet",
+			"-device", "virtio-net-pci,netdev=inet,id=idev,"
+				   "disable-legacy=on,disable-modern=off,"
+				   "iommu_platform=on,ats=on",
+			"-smbios", "type=41,designation='Onboard LAN',"
+				   "instance=1,kind=ethernet,pcidev=idev",
 		]
 	else:
 		cmd += ["-net", "none"]
@@ -83,9 +87,10 @@ def build_qemu_command(qemu_arch, disk_path, kernel_path, kernel_cmdline,
 
 	if interactive:
 		imgstr = os.path.basename(disk_path)
+		confile = f"/tmp/console-{imgstr}"
 		cmd += [
 			"-chardev",
-			f"file,path=/tmp/console-{imgstr},id=hostconsole",
+			f"file,path={confile},id=hostconsole",
 			"-serial", "chardev:hostconsole",
 			"-device", "virtio-serial-pci", "-chardev",
 			f"socket,path=/tmp/login-{imgstr},id=hostlogin",
@@ -133,8 +138,8 @@ def sub_run_consoles(args):
 		f"tmux set-option -p remain-on-exit on; "
 		f"socat UNIX-LISTEN:/tmp/login-{istr} -,raw,icanon=0,echo=0"]
 	cmd2 = ["tail", "-f", confile]
-	with open(confile, "a") as _:
-		pass
+	with open(confile, "a") as f:
+		os.fsync(f.fileno())
 
 	login_window = subprocess.Popen(cmd1)
 	console_window = subprocess.Popen(cmd2)

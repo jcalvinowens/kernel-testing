@@ -5,7 +5,7 @@ STAGETARBALL=""
 IMGSIZE="10G"
 SERCON="ttyS"
 NETCON="enp1s0"
-IMGXCOMP="zstd:9"
+IMGXCOMP="zstd:15"
 IMGCOMP="zstd:1"
 
 HELPTEXT="Usage: ./make-image.sh [opts] <rootfs_tar_path> <disk_path>
@@ -65,14 +65,14 @@ cat > ${TMPDIR}/etc/fstab <<-END
 END
 
 echo "Unpacking portage snapshot into ${TMPDIR}"
-if [ ! -e tarballs/portage.tar.xz ]; then
+if [ ! -e snapshots/portage.tar.xz ]; then
 	wget https://distfiles.gentoo.org/snapshots/portage-latest.tar.xz \
-		-O tarballs/portage.tar.xz
+		-O snapshots/portage.tar.xz
 fi
 mkdir -p ${TMPDIR}/etc/portage/repos.conf
 cp ${TMPDIR}/usr/share/portage/config/repos.conf \
 	${TMPDIR}/etc/portage/repos.conf/gentoo.conf
-tar xfs tarballs/portage.tar.xz -C ${TMPDIR}/var/db/repos
+tar xfs snapshots/portage.tar.xz -C ${TMPDIR}/var/db/repos
 mv ${TMPDIR}/var/db/repos/portage ${TMPDIR}/var/db/repos/gentoo
 cat >> ${TMPDIR}/etc/portage/make.conf <<-END
 USE="\${USE} verify-sig"
@@ -108,7 +108,7 @@ if [ -e ${TMPDIR}/etc/systemd/ ]; then
 	ln -s /usr/lib/systemd/system/getty@.service \
 		${TMPDIR}/etc/systemd/system/getty.target.wants/getty@hvc0.service
 else
-	cat > ${TMPDIR}/etc/conf.d/hostname <<< \"hostname=\\\"${COSNAME}\\\"\"
+	cat > ${TMPDIR}/etc/conf.d/hostname <<< "hostname=\"${COSNAME}\""
 	cat > ${TMPDIR}/etc/conf.d/net <<-END
 	config_${NETCON}="dhcp"
 	END

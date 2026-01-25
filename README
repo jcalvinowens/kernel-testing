@@ -2,7 +2,7 @@ kernel-testing: Simple scripts for testing the Linux kernel under KVM
 =====================================================================
 
 This is a simple set of scripts for quickly testing the Linux kernel
-under KVM. The scripts depend on qemu, tmux, btrfs-progs, and socat.
+under KVM. The scripts depend on: qemu, tmux, btrfs, gpg, and socat.
 
 Getting started is easy:
 
