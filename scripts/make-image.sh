@@ -1,12 +1,24 @@
-#!/bin/fakeroot /bin/bash
+#!/bin/fakeroot /bin/sh
 
-set -e
+# Copyright (C) 2014 Calvin Owens <calvin@wbinvd.org>
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+set -ue
 STAGETARBALL=""
 IMGSIZE="10G"
 SERCON="ttyS"
 NETCON="enp1s0"
 IMGXCOMP="zstd:15"
 IMGCOMP="zstd:1"
+IMGCSUM="crc32c"
 
 HELPTEXT="Usage: ./make-image.sh [opts] <rootfs_tar_path> <disk_path>
 	-s [size]	Size of sparse file for new disks (default ${IMGSIZE})
@@ -14,15 +26,17 @@ HELPTEXT="Usage: ./make-image.sh [opts] <rootfs_tar_path> <disk_path>
 	-n [netcon]	Netdevice, only needed for openrc (default ${NETCON})
 	-x [level]	Compression for extraction (default ${IMGXCOMP})
 	-z [level]	Compression for VM fstab (default ${IMGCOMP})
+	-k [csum_algo]	Checksum algorithm for filesystem (default ${IMGCSUM})
 "
 
-while getopts s:c:n:x:l:z:h i; do
+while getopts s:c:n:x:l:z:k:h i; do
 	case $i in
 		s) IMGSIZE="${OPTARG}" ;;
 		c) SERCON="${OPTARG}" ;;
 		n) NETCON="${OPTARG}" ;;
 		x) IMGXCOMP="${OPTARG}" ;;
 		z) IMGCOMP="${OPTARG}" ;;
+		k) IMGCSUM="${OPTARG}" ;;
 		h) echo "${HELPTEXT}"; exit ;;
 	esac
 done
@@ -30,7 +44,7 @@ done
 TARIND="${OPTIND}"
 DSKIND="$[OPTIND + 1]"
 
-if [ -n "${!TARIND}" ]; then
+if [ -n "${!TARIND+x}" ]; then
 	STAGETARBALL="${!TARIND}"
 else
 	echo "What disk archive should I use?"
@@ -39,7 +53,7 @@ else
 	done
 fi
 
-if [ -n "${!DSKIND}" ]; then
+if [ -n "${!DSKIND+x}" ]; then
 	IMG="${!DSKIND}"
 else
 	echo "To which disk image am I extracting the filesystem?"
@@ -75,7 +89,6 @@ cp ${TMPDIR}/usr/share/portage/config/repos.conf \
 tar xfs snapshots/portage.tar.xz -C ${TMPDIR}/var/db/repos
 mv ${TMPDIR}/var/db/repos/portage ${TMPDIR}/var/db/repos/gentoo
 cat >> ${TMPDIR}/etc/portage/make.conf <<-END
-USE="\${USE} verify-sig"
 FEATURES="\${FEATURES} binpkg-request-signature"
 EMERGE_DEFAULT_OPTS="-g"
 END
@@ -127,7 +140,7 @@ chattr +C ${IMG} || true
 truncate -s${IMGSIZE} ${IMG}
 
 /usr/sbin/mkfs.btrfs \
-	--nodiscard --metadata single --data single --csum blake2 \
+	--nodiscard --metadata single --data single --csum ${IMGCSUM} \
 	--rootdir ${TMPDIR} --compress ${IMGXCOMP} ${IMG}
 
 echo "done!"
