@@ -22,7 +22,8 @@ CMDLINE = "systemd.gpt_auto=no systemd.getty_auto=no initcall_debug ignore_logle
 ARCH_CMDLINES = {
 	"x86": "root=/dev/vda earlyprintk=serial,ttyS0 console=ttyS0",
 	"ARM": "root=/dev/vda console=ttyAMA0",
-	"ARM64": "root=/dev/vda console=ttyAMA0"
+	"ARM64": "root=/dev/vda console=ttyAMA0",
+	"RISC-V": "root=/dev/vda console=ttyS0",
 }
 
 QEMU_ARCH_ARGS = {
@@ -47,12 +48,19 @@ QEMU_ARCH_ARGS = {
 		"-m", "2048",
 		"-device", "virtio-iommu-pci,granule=host",
 	],
+	"riscv64": [
+		"-machine", "virt",
+		"-cpu", "rv64,sscofpmf=true",
+		"-smp", "2",
+		"-m", "2048",
+	],
 }
 
 ARCH_TO_QEMU_ARCH = {
 	"x86": "x86_64",
 	"ARM": "arm",
 	"ARM64": "aarch64",
+	"RISC-V": "riscv64",
 }
 
 def build_qemu_command(qemu_arch, disk_path, kernel_path, kernel_cmdline,

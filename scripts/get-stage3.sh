@@ -13,6 +13,8 @@ fi
 
 if [ "${ARCH}" != "arm64" ] && [ "${ARCH:0:3}" == "arm" ]; then
 	SARCH="arm"
+elif [ "${ARCH:0:4}" == "rv64" ]; then
+	SARCH="riscv"
 else
 	SARCH="${ARCH}"
 fi

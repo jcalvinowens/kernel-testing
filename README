@@ -18,6 +18,10 @@ Getting started is easy:
 	$ scripts/make-image.sh -c ttyAMA tarballs/*armv7a* disks/arm.img
 	$ ./run.py armv7a.img ../linux/arch/arm/boot/zImage
 
+	$ scripts/get-stage3.sh rv64_multilib
+	$ scripts/make-image.sh tarballs/*rv64* disks/rv64.img
+	$ ./run.py rv64.img ../linux/arch/riscv/boot/Image
+
 	[ More coming soon... ]
 
 The included Kconfigs do not use modules, so nothing needs to be copied
