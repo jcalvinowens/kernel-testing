@@ -28,7 +28,7 @@ ARCH_CMDLINES = {
 
 QEMU_ARCH_ARGS = {
 	"x86_64": [
-		"-machine", "q35,accel=kvm,kernel-irqchip=split",
+		"-machine", "q35,kernel-irqchip=split",
 		"-cpu", "max",
 		"-smp", "2",
 		"-m", "2048",
@@ -114,11 +114,8 @@ def build_qemu_command(qemu_arch, disk_path, kernel_path, kernel_cmdline,
 	return cmd
 
 def sub_run_qemu(args):
-	arch = subprocess.check_output(["file", "-b", args.kernel])
-	if "kernel" not in arch.decode("ascii", "ignore"):
-		arch = subprocess.check_output(
-			["bash", "-c", f"zcat {args.kernel} | file -b -"],
-		)
+	arch = subprocess.check_output(["file", "-ZSb", args.kernel])
+	arch = arch.decode("ascii", "ignore").split(" ")[2]
 
 	ccmd = ["tmux", "split-window", "-p", "85", "-v", "-l80%",
 	       f"tmux set-option -p remain-on-exit on; "
@@ -126,7 +123,6 @@ def sub_run_qemu(args):
 	       f"{args.kernel} {args.dtb or ''} --run-consoles"
 	]
 
-	arch = arch.decode("ascii", "ignore").split(" ")[2]
 	qcmd = build_qemu_command(ARCH_TO_QEMU_ARCH[arch], args.disk,
 				  args.kernel,
 				  " ".join([CMDLINE, ARCH_CMDLINES[arch]]),
