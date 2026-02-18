@@ -17,8 +17,8 @@
 gittag_gcc13="releases/gcc-13.4.0" #"origin/releases/gcc-13"
 gittag_gcc14="releases/gcc-14.3.0" #"origin/releases/gcc-14"
 gittag_gcc15="releases/gcc-15.2.0" #"origin/releases/gcc-15"
-gittag_binutils="binutils-2_45_1" #"origin/binutils-2_45-branch"
-gittag_kheaders="v6.18"
+gittag_binutils="binutils-2_46" #"origin/binutils-2_46-branch"
+gittag_kheaders="v6.19"
 
 giturl_gcc="git://gcc.gnu.org/git/gcc.git"
 giturl_binutils="git://sourceware.org/git/binutils-gdb.git"

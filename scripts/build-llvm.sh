@@ -13,8 +13,8 @@
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-llvm_version="21.1.8"
-gittag_llvm="llvmorg-${llvm_version}" #"origin/release/21.x"
+llvm_version="22.1.0-rc3"
+gittag_llvm="llvmorg-${llvm_version}" #"origin/release/22.x"
 giturl_llvm="https://github.com/llvm/llvm-project.git"
 gitpath_llvm="${HOME}/git/llvm"
 tgt_llvm="${HOME}/llvm-${llvm_version}"
@@ -44,8 +44,8 @@ build_llvm() {
 	cd build
 	cmake -G Ninja \
 		-DCMAKE_BUILD_TYPE=${llvm_reltype} \
-		-DLLVM_ENABLE_PROJECTS=all \
-		-DLLVM_ENABLE_RUNTIMES=all \
+		-DLLVM_ENABLE_PROJECTS="clang;lld;lldb" \
+		-DLLVM_ENABLE_RUNTIMES="" \
 		-DCLANG_ENABLE_BOOTSTRAP=ON \
 		-DCMAKE_C_COMPILER=${build_prefix}${cc_name} \
 		-DCMAKE_CXX_COMPILER=${build_prefix}${cxx_name} \
