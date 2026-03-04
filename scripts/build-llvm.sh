@@ -13,7 +13,7 @@
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-llvm_version="22.1.0-rc3"
+llvm_version="22.1.0"
 gittag_llvm="llvmorg-${llvm_version}" #"origin/release/22.x"
 giturl_llvm="https://github.com/llvm/llvm-project.git"
 gitpath_llvm="${HOME}/git/llvm"
