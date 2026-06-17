@@ -23,7 +23,7 @@ ARCH_CMDLINES = {
 	"x86": "root=/dev/vda earlyprintk=serial,ttyS0 console=ttyS0",
 	"ARM": "root=/dev/vda console=ttyAMA0",
 	"ARM64": "root=/dev/vda console=ttyAMA0",
-	"RISC-V": "root=/dev/vda console=ttyS0",
+	"RISC-V": "root=/dev/vda console=ttyS0 earlycon=sbi",
 }
 
 QEMU_ARCH_ARGS = {
@@ -180,6 +180,8 @@ def main(args):
 				args.kernel = "arch/arm/boot/zImage"
 			elif os.access("arch/arm64/boot/Image.gz", os.R_OK):
 				args.kernel = "arch/arm64/boot/Image.gz"
+			elif os.access("arch/riscv/boot/Image", os.R_OK):
+				args.kernel = "arch/riscv/boot/Image"
 			else:
 				print("No kernel in this tree?")
 				sys.exit(1)
