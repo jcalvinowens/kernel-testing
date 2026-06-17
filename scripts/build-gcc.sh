@@ -15,9 +15,9 @@
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 gittag_gcc16="releases/gcc-16.1.0" #"origin/releases/gcc-16"
-gittag_gcc15="releases/gcc-15.2.0" #"origin/releases/gcc-15"
-gittag_binutils="binutils-2_46" #"origin/binutils-2_46-branch"
-gittag_kheaders="v7.0" #"master"
+gittag_gcc15="releases/gcc-15.3.0" #"origin/releases/gcc-15"
+gittag_binutils="binutils-2_46_1" #"origin/binutils-2_46-branch"
+gittag_kheaders="v7.1" #"master"
 
 giturl_gcc="git://gcc.gnu.org/git/gcc.git"
 giturl_binutils="git://sourceware.org/git/binutils-gdb.git"
