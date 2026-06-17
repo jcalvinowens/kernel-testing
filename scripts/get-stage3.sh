@@ -1,6 +1,6 @@
 #!/bin/sh -ue
 
-gpg --import scripts/20250806.asc > /dev/null 2> /dev/null || true
+gpg --import scripts/20260125.asc > /dev/null 2> /dev/null || true
 SRC="https://distfiles.gentoo.org/releases/"
 
 ARCH=amd64
