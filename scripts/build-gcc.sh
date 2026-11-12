@@ -14,10 +14,9 @@
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-gittag_gcc16="releases/gcc-16.1.0" #"origin/releases/gcc-16"
-gittag_gcc15="releases/gcc-15.3.0" #"origin/releases/gcc-15"
-gittag_binutils="binutils-2_46_1" #"origin/binutils-2_46-branch"
-gittag_kheaders="v7.1" #"master"
+gittag_gcc16="releases/gcc-16.2.0" #"origin/releases/gcc-16"
+gittag_binutils="binutils-2_47" #"origin/binutils-2_47-branch"
+gittag_kheaders="v7.3" #"master"
 
 giturl_gcc="git://gcc.gnu.org/git/gcc.git"
 giturl_binutils="git://sourceware.org/git/binutils-gdb.git"
@@ -28,7 +27,6 @@ gitpath_binutils="${HOME}/git/binutils"
 gitpath_kheaders="${HOME}/git/linux"
 
 vendor="house"
-tgt_gnu15="${HOME}/gnu-15"
 tgt_gnu16="${HOME}/gnu-16"
 build_cflags="-O2 -march=native -mtune=native -pipe"
 nr_jobs=$[$(grep -Fc processor /proc/cpuinfo) + 1]
@@ -198,5 +196,4 @@ build_gcc_set() {
 [ -d ${gitpath_binutils} ] || git clone ${giturl_binutils} ${gitpath_binutils}
 [ -d ${gitpath_kheaders} ] || git clone ${giturl_kern} ${gitpath_kheaders}
 
-build_gcc_set ${tgt_gnu15} ${gittag_gcc15}
 build_gcc_set ${tgt_gnu16} ${gittag_gcc16}
